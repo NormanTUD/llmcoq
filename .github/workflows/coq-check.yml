@@ -20,15 +20,15 @@ jobs:
       - name: Compile all .v files in order
         run: |
           set -e
+          # Map the current directory (.) to the logical name 'base'
+          # Use -Q . base if you don't want subdirectories to be recursive
+          # Use -R . base if you want recursive mapping
+          
           FILES=$(find . -name "*.v" -type f | sort)
-          if [ -z "$FILES" ]; then
-            echo "No .v files found."
-            exit 1
-          fi
-
+          
           for file in $FILES; do
             echo "::group::Compiling $file"
-            if coqc "$file"; then
+            if coqc -Q . base "$file"; then
               echo "✅ $file compiled successfully."
             else
               echo "::error::Compilation failed for $file"

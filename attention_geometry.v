@@ -7,7 +7,6 @@ Require Import Coq.Reals.Reals.
 Require Import Coq.Lists.List.
 Require Import Coq.Arith.PeanoNat.
 Require Import Coq.micromega.Lia.
-Require Import base.
 
 Import ListNotations.
 Open Scope R_scope.

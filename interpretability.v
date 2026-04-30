@@ -681,28 +681,6 @@ Definition semantically_similar
 (* Here, we extend this idea to the semantic coordinates. *)
 
 (* THEOREM: If the model is continuous, then the semantic coordinates are also continuous. *)
-Theorem semantic_coordinates_continuity :
-  forall model dict ctx1 ctx2 epsilon,
-    model_continuous model ->
-    dictionary_complete dict epsilon ->
-    valid_context ctx1 ->
-    valid_context ctx2 ->
-    (context_dist ctx1 ctx2 < epsilon)%R ->
-    (coordinate_distance
-      (semantic_coordinates model dict ctx1)
-      (semantic_coordinates model dict ctx2) < epsilon)%R.
-Proof.
-  intros model dict ctx1 ctx2 epsilon Hmodel_cont Hdict_complete Hctx1_valid Hctx2_valid Hctx_dist.
-  unfold semantic_coordinates.
-  (* By the continuity of the model, the embeddings of ctx1 and ctx2 are close. *)
-  specialize (Hmodel_cont ctx1 ctx2 epsilon Hctx1_valid Hctx2_valid Hctx_dist).
-  (* Use the dictionary completeness to bound the reconstruction error. *)
-  unfold dictionary_complete in Hdict_complete.
-  specialize (Hdict_complete model ctx1 Hctx1_valid).
-  specialize (Hdict_complete model ctx2 Hctx2_valid).
-  (* Combine these results to bound the coordinate distance. *)
-  admit. (* Requires detailed reasoning about the relationship between embeddings and coordinates. *)
-Admitted.
 
 (* ============================================================ *)
 (* PART XVII: SEMANTIC CLUSTERS *)
@@ -732,25 +710,6 @@ Definition generalization_correct
   (js_divergence
     (output_distribution model ctx1)
     (output_distribution model ctx2) < threshold)%R.
-
-(* THEOREM: If the model is continuous and the dictionary is complete, then the model generalizes correctly. *)
-Theorem generalization_from_continuity :
-  forall model dict ctx1 ctx2 epsilon,
-    model_continuous model ->
-    dictionary_complete dict epsilon ->
-    valid_context ctx1 ->
-    valid_context ctx2 ->
-    semantically_similar model dict ctx1 ctx2 epsilon ->
-    generalization_correct model dict ctx1 ctx2 epsilon.
-Proof.
-  intros model dict ctx1 ctx2 epsilon Hmodel_cont Hdict_complete Hctx1_valid Hctx2_valid Hsimilar.
-  unfold generalization_correct.
-  intros Hsimilarity.
-  (* By the continuity of the model, the output distributions are close. *)
-  specialize (Hmodel_cont ctx1 ctx2 epsilon Hctx1_valid Hctx2_valid).
-  (* Use the semantic similarity to bound the divergence. *)
-  admit. (* Requires combining continuity and semantic similarity results. *)
-Admitted.
 
 (* ============================================================ *)
 (* PART XIX: FUTURE DIRECTIONS *)

@@ -268,30 +268,6 @@ Definition task_as_target (t : Task) : target_function :=
   fun ctx => task_ideal_response t.
   (* Constant function — only care about the task's specific context *)
 
-(* Step 2: For a finite collection of tasks, we can approximate all *)
-Lemma finite_task_approximation :
-  forall (tasks : list Task) (epsilon : R),
-    (epsilon > 0)%R ->
-    (forall t, List.In t tasks -> is_distribution (task_ideal_response t)) ->
-    exists (model : TransformerModel),
-      Forall (fun t => model_solves_task model t epsilon) tasks.
-Proof.
-  intros tasks epsilon Heps Hvalid.
-  (* We need a combined target function over all task contexts *)
-  (* Use universal approximation on the combined domain *)
-  pose (domain := map task_description tasks).
-  pose (combined_target := fun ctx : Context => 
-    match find (fun t => 
-      if list_eq_dec (Embedding_eq_dec) (task_description t) ctx 
-      then true else false
-    ) tasks with
-    | Some t => task_ideal_response t
-    | None => output_distribution (* need a default — this approach is getting complex *)
-    end).
-  (* This construction is getting unwieldy. Let's axiomatize for now *)
-  (* and refine in the next iteration. *)
-Abort.
-
 (* For now, we state the finite approximation as an axiom derived *)
 (* from universal_approximation, to be proven in next iteration. *)
 Axiom finite_task_approximation :
@@ -386,9 +362,9 @@ Lemma bayes_optimal_kl_zero : forall model ctx,
   kl_divergence (true_distribution ctx) (output_distribution model ctx) = 0%R.
 Proof.
   intros model ctx Hopt Hvalid Hdist.
-  unfold kl_divergence, entropy.
-  unfold bayes_optimal in Hopt.
+  unfold kl_divergence.
   rewrite Hopt; try assumption.
+  unfold entropy.
   lra.
 Qed.
 
@@ -401,9 +377,12 @@ Lemma bayes_optimal_learns_truth : forall model ctx,
   output_distribution model ctx = true_distribution ctx.
 Proof.
   intros model ctx Hopt Hvalid Hdist_true Hdist_model.
-  pose proof (bayes_optimal_kl_zero model ctx Hopt Hvalid Hdist_true) as Hkl.
-  apply kl_zero_iff in Hkl; assumption.
-Qed.
+  unfold kl_divergence in *.
+  unfold bayes_optimal in Hopt.
+  specialize (Hopt ctx Hvalid Hdist_true).
+  (* Use the definition of KL divergence and the fact that H(p, q) = H(p) for Bayes-optimal models *)
+  (* Complete the proof based on the specific definition of kl_divergence *)
+Abort.
 
 (* ============================================================ *)
 (* PART XVI: SCALING LAWS (empirical structure, axiomatized)      *)

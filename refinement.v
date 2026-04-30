@@ -63,42 +63,25 @@ Proof.
   unfold residual_connection.
   rewrite context_layer_norm_length.
   apply context_add'_length.
-  exact Hsub.
+  symmetry. exact Hsub.
 Qed.
 
-(* Now prove transformer_layer_apply preserves length *)
 Lemma transformer_layer_preserves_length : forall l ctx,
   length (transformer_layer_apply l ctx) = length ctx.
 Proof.
   intros l ctx.
   unfold transformer_layer_apply.
-  apply residual_connection_length.
-  apply ffn_preserves_length.
-  Unshelve.
-  (* We also need the attention residual to preserve length *)
-  (* Actually, let's restructure: the let bindings unfold sequentially *)
-Abort.
-
-(* The issue is that transformer_layer_apply has two residual connections. *)
-(* Let's prove it step by step. *)
-
-Lemma transformer_layer_preserves_length : forall l ctx,
-  length (transformer_layer_apply l ctx) = length ctx.
-Proof.
-  intros l ctx.
-  unfold transformer_layer_apply.
-  (* after_attn := residual_connection (mha_apply (tl_mha l)) ctx *)
-  (* after_ffn := residual_connection (ffn_apply (tl_ffn l)) after_attn *)
-  (* We need: length after_attn = length ctx *)
-  assert (Hattn: length (residual_connection (mha_apply (tl_mha l)) ctx) = length ctx).
+  set (after_attn := residual_connection (mha_apply (tl_mha l)) ctx).
+  assert (Hattn : length after_attn = length ctx).
   {
+    unfold after_attn.
     apply residual_connection_length.
     apply mha_preserves_length.
   }
-  (* Now: length (residual_connection (ffn_apply (tl_ffn l)) after_attn) = length after_attn *)
-  rewrite residual_connection_length.
+  transitivity (length after_attn).
+  - apply residual_connection_length.
+    apply ffn_preserves_length.
   - exact Hattn.
-  - apply ffn_preserves_length.
 Qed.
 
 (* Now we can give the unconditional version of apply_all_layers_length *)

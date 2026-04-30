@@ -1,6 +1,6 @@
 # AI Self-Formalization: Geometric and Topological Logic of Transformers
 
-This repository contains a formal verification project developed in Coq (v8.15+) that attempts to axiomatize and prove the fundamental properties of Transformer models, their training dynamics, and their emergent topological structures. It represents a "self-formalization" of AI architecture, exploring the boundary between empirical deep learning and rigorous mathematical logic.
+This repository contains a formal verification project developed in Coq (v8.15+) that attempts to axiomatize and prove the fundamental properties of Transformer models, their training dynamics, and their emergent topological structures. It represents a "self-formalization" of AI architecture, exploring the boundary between empirical deep learning and rigorous mathematical logic. These proofs were written by Claude.
 
 ## Project Overview
 

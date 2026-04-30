@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🧠 LLM Formal Proofs — Interactive Explorer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0a0a1a;
+  color: #e0e0e0;
+  overflow-x: hidden;
+}
+.hero {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #1a0a2e, #0a1628, #0a2a1a);
+  border-bottom: 1px solid #333;
+}
+.hero h1 {
+  font-size: 2.5em;
+  background: linear-gradient(90deg, #ff6ec4, #7873f5, #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+.hero p { color: #999; font-size: 1.1em; max-width: 700px; margin: 0 auto; }
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  background: #111;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #333;
+}
+.tab {
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: 1px solid #444;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9em;
+}
+.tab:hover { border-color: #7873f5; color: #fff; }
+.tab.active { background: #7873f5; border-color: #7873f5; color: #fff; }
+
+.panel {
+  display: none;
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.panel.active { display: block; }
+
+.card {
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.card h2 {
+  font-size: 1.4em;
+  margin-bottom: 12px;
+  color: #7873f5;
+}
+.card h3 { color: #4ade80; margin: 16px 0 8px; }
+.card p { line-height: 1.7; color: #ccc; margin-bottom: 12px; }
+
+canvas {
+  display: block;
+  margin: 20px auto;
+  border-radius: 8px;
+  border: 1px solid #333;
+  cursor: crosshair;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 16px 0;
+}
+.controls label { color: #aaa; font-size: 0.9em; }
+.controls input[type="range"] { width: 200px; accent-color: #7873f5; }
+.controls button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #7873f5;
+  background: transparent;
+  color: #7873f5;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.controls button:hover { background: #7873f5; color: #fff; }
+.controls button.active-btn { background: #7873f5; color: #fff; }
+
+.value-display {
+  font-family: monospace;
+  color: #4ade80;
+  font-size: 0.9em;
+}
+
+.proof-box {
+  background: #0d1117;
+  border: 1px solid #4ade80;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+  font-family: monospace;
+  font-size: 0.85em;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+.proof-box .keyword { color: #ff79c6; }
+.proof-box .tactic { color: #8be9fd; }
+.proof-box .comment { color: #6272a4; }
+
+.insight {
+  background: linear-gradient(135deg, #1a0a2e, #0a1628);
+  border-left: 3px solid #ff6ec4;
+  padding: 16px;
+  margin: 12px 0;
+  border-radius: 0 8px 8px 0;
+}
+.insight strong { color: #ff6ec4; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85em;
+}
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🧠 What Do These Proofs Prove?</h1>
+  <p>A formal Coq verification of transformer/LLM mathematics — made interactive. Click around, drag things, break stuff. <em>See</em> why these theorems matter.</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showPanel(0)">🎯 KL Divergence</div>
+  <div class="tab" onclick="showPanel(1)">🔺 Attention Simplices</div>
+  <div class="tab" onclick="showPanel(2)">🧬 Feature Orthogonality</div>
+  <div class="tab" onclick="showPanel(3)">📐 Layer Preservation</div>
+  <div class="tab" onclick="showPanel(4)">🌐 Topology & Continuity</div>
+  <div class="tab" onclick="showPanel(5)">🔄 Self-Consistency</div>
+</div>
+
+<!-- Panel 0: KL Divergence -->
+<div class="panel active" id="panel-0">
+  <div class="card">
+    <h2>KL Divergence ≥ 0 (Gibbs' Inequality)</h2>
+    <p><strong>What's proved:</strong> The "distance" between any two probability distributions is always non-negative. You can never have a negative information gap. This means: <em>no model can be "better than perfect"</em> — the true distribution is always the best predictor of itself.</p>
+    
+    <div class="insight">
+      <strong>Why it matters:</strong> This is the foundation of all LLM training. The loss function (cross-entropy) always has a floor — the entropy of the true data. Training pushes toward this floor but can never go below it.
+    </div>
+
+    <canvas id="kl-canvas" width="700" height="400"></canvas>
+    
+    <div class="controls">
+      <label>Distribution Q (model): drag the bars!</label>
+      <button onclick="resetKL()">Reset</button>
+      <button onclick="matchKL()">Match P (optimal)</button>
+    </div>
+    
+    <div class="value-display" id="kl-values"></div>
+
+    <div class="proof-box">
+      <span class="keyword">Lemma</span> kl_nonneg : ∀ p q, is_distribution p → is_distribution q → kl_divergence p q ≥ 0.<br>
+      <span class="keyword">Proof.</span><br>
+      &nbsp;&nbsp;<span class="tactic">unfold</span> kl_divergence, entropy.<br>
+      &nbsp;&nbsp;<span class="tactic">pose proof</span> (gibbs_inequality p q). <span class="comment">(* H(p,q) ≥ H(p,p) *)</span><br>
+      &nbsp;&nbsp;<span class="tactic">lra.</span> <span class="comment">(* KL = H(p,q) - H(p) ≥ 0 ✓ *)</span><br>
+      <span class="keyword">Qed.</span>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 1: Attention Simplices -->
+<div class="panel" id="panel-1">
+  <div class="card">
+    <h2>Attention as a Simplicial Complex</h2>
+    <p><strong>What's proved:</strong> When tokens attend to each other above a threshold, they form geometric shapes (simplices). Any subset of a mutually-attending group also mutually attends — this is the "face preservation" property. The collection of all such groups forms a valid simplicial complex.</p>
+
+    <div class="insight">
+      <strong>Why it matters:</strong> This gives attention a rigorous geometric/topological structure. You can compute "holes" (Betti numbers) in the attention pattern — connected components = separate topics, loops = circular reasoning, voids = knowledge gaps.
+    </div>
+
+    <canvas id="simplex-canvas" width="700" height="450"></canvas>
+    
+    <div class="controls">
+      <label>Threshold: </label>
+      <input type="range" id="threshold-slider" min="0" max="100" value="30" oninput="updateSimplex()">
+      <span class="value-display" id="threshold-val">0.30</span>
+      <button onclick="randomizeAttention()">Randomize Attention</button>
+      <button onclick="addToken()">Add Token</button>
+    </div>
+    
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> Token (vertex)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7873f5"></div> Edge (2-simplex)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,110,196,0.3)"></div> Triangle (3-simplex)</div>
+    </div>
+    
+    <div class="value-display" id="simplex-info"></div>
+
+    <div class="proof-box">
+      <span class="keyword">Lemma</span> is_simplex_face_preservation :<br>
+      &nbsp;&nbsp;∀ attn simplex face threshold,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;is_simplex attn simplex threshold →<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;incl face simplex →<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;is_simplex attn face threshold.<br>
+      <span class="keyword">Proof.</span><br>
+      &nbsp;&nbsp;<span class="tactic">intros</span>. <span class="tactic">unfold</span> is_simplex in *.<br>
+      &nbsp;&nbsp;<span class="tactic">intros</span> i j Hi Hj Hneq.<br>
+      &nbsp;&nbsp;<span class="comment">(* face ⊆ simplex, so i,j ∈ simplex *)</span><br>
+      &nbsp;&nbsp;<span class="tactic">apply</span> H_incl in Hi, Hj.<br>
+      &nbsp;&nbsp;<span class="tactic">apply</span> H_sim; assumption. <span class="comment">(* ✓ *)</span><br>
+      <span class="keyword">Qed.</span>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 2: Feature Orthogonality -->
+<div class="panel" id="panel-2">
+  <div class="card">
+    <h2>Feature Independence & Intervention Algebra</h2>
+    <p><strong>What's proved:</strong> If concept directions are orthogonal, then "ablating" (removing) one feature doesn't affect any other feature. Steering one feature to a target value works perfectly without side effects. This is the math behind activation patching and steering vectors.</p>
+
+    <div class="insight">
+      <strong>Why it matters:</strong> This is the formal foundation of mechanistic interpretability (SAEs, probing, representation engineering). Orthogonal features = independent knobs you can turn. The proof shows: <em>if features are orthogonal, interpretability is exact.</em>
+    </div>
+
+    <canvas id="ortho-canvas" width="700" height="450"></canvas>
+    
+    <div class="controls">
+      <label>Feature A strength:</label>
+      <input type="range" id="feat-a" min="-100" max="100" value="60" oninput="updateOrtho()">
+      <label>Feature B strength:</label>
+      <input type="range" id="feat-b" min="-100" max="100" value="40" oninput="updateOrtho()">
+      <label>Angle between:</label>
+      <input type="range" id="feat-angle" min="0" max="90" value="90" oninput="updateOrtho()">
+      <span class="value-display" id="angle-val">90°</span>
+    </div>
+    <div class="controls">
+      <button id="ablate-a-btn" onclick="toggleAblate('a')">Ablate A</button>
+      <button id="ablate-b-btn" onclick="toggleAblate('b')">Ablate B</button>
+      <button onclick="resetOrtho()">Reset</button>
+    </div>
+    
+    <div class="value-display" id="ortho-info"></div>
+
+    <div class="proof-box">
+      <span class="keyword">Theorem</span> ablation_preserves_orthogonal :<br>
+      &nbsp;&nbsp;∀ model dict ctx i j ci cj,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;vec_dot(ci, cj) = 0 → <span class="comment">(* orthogonal! *)</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;concept_activation cj (ablate_feature ... i) =<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;concept_activation cj (transformer_forward model ctx).<br>
+      <span class="keyword">Proof.</span><br>
+      &nbsp;&nbsp;<span class="tactic">rewrite</span> vec_dot_add_r, vec_dot_scale_r.<br>
+      &nbsp;&nbsp;<span class="tactic">rewrite</span> (vec_dot_comm _ cj ci).<br>
+      &nbsp;&nbsp;<span class="tactic">rewrite</span> Horth. <span class="comment">(* dot = 0 → leakage = 0 *)</span><br>
+      &nbsp;&nbsp;<span class="tactic">lra.</span> <span class="comment">(* ✓ *)</span><br>
+      <span class="keyword">Qed.</span>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 3: Layer Preservation -->
+<div class="panel" id="panel-3">
+  <div class="card">
+    <h2>Transformer Layers Preserve Sequence Length</h2>
+    <p><strong>What's proved:</strong> Every component of a transformer (attention, FFN, residual connections, layer norm) preserves the number of tokens. What goes in with N tokens comes out with N tokens. This is proved by structural induction through all layers.</p>
+
+    <div class="insight">
+      <strong>Why it matters:</strong> This guarantees the transformer's architecture is well-formed — you can stack layers without worrying about dimension mismatches. It's a type-safety proof for neural network architecture.
+    </div>
+
+    <canvas id="layer-canvas" width="700" height="400"></canvas>
+    
+    <div class="controls">
+      <label>Tokens:</label>
+      <input type="range" id="num-tokens" min="2" max="12" value="5" oninput="updateLayers()">
+      <label>Layers:</label>
+      <input type="range" id="num-layers" min="1" max="8" value="3" oninput="updateLayers()">
+      <button onclick="animateLayers()">▶ Animate Forward Pass</button>
+    </div>
+    
+    <div class="value-display" id="layer-info"></div>
+
+    <div class="proof-box">
+      <span class="keyword">Theorem</span> apply_all_layers_preserves_length : ∀ layers ctx,<br>
+      &nbsp;&nbsp;length (apply_all_layers layers ctx) = length ctx.<br>
+      <span class="keyword">Proof.</span><br>
+      &nbsp;&nbsp;<span class="tactic">induction</span> layers as [| l rest IH].<br>
+      &nbsp;&nbsp;- simpl. reflexivity. <span class="comment">(* base: no layers = no change *)</span><br>
+      &nbsp;&nbsp;- simpl. <span class="tactic">rewrite</span> IH.<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> transformer_layer_preserves_length. <span class="comment">(* inductive step ✓ *)</span><br>
+      <span class="keyword">Qed.</span>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 4: Topology & Continuity -->
+<div class="panel" id="panel-4">
+  <div class="card">
+    <h2>Model Continuity & Knowledge Topology</h2>
+    <p><strong>What's proved:</strong> Small changes to the input context produce small changes in the output distribution (continuity). Open sets in context space are upward-closed under the prefix ordering (Alexandrov topology). Intersections and unions of open sets remain open.</p>
+
+    <div class="insight">
+      <strong>Why it matters:</strong> Continuity means the model won't hallucinate wildly from a tiny input change. The topology gives "knowledge regions" — neighborhoods where the model behaves consistently. This is why similar prompts give similar answers.
+    </div>
+
+    <canvas id="topo-canvas" width="700" height="450"></canvas>
+    
+    <div class="controls">
+      <label>Epsilon (ball radius):</label>
+      <input type="range" id="epsilon-slider" min="5" max="80" value="30" oninput="updateTopo()">
+      <span class="value-display" id="eps-val">0.30</span>
+      <button onclick="addContext()">Add Context Point</button>
+      <button onclick="resetTopo()">Reset</button>
+    </div>
+    
+    <div class="value-display" id="topo-info"></div>
+
+    <div class="proof-box">
+      <span class="keyword">Lemma</span> intersection_upward_closed : ∀ U V,<br>
+      &nbsp;&nbsp;upward_closed U → upward_closed V → upward_closed (U ∩ V).<br>
+      <span class="keyword">Proof.</span><br>
+      &nbsp;&nbsp;<span class="tactic">intros</span> U V HU HV c1 c2 Hin Hpre.<br>
+      &nbsp;&nbsp;<span class="tactic">inversion</span> Hin. <span class="tactic">constructor</span>.<br>
+      &nbsp;&nbsp;- <span class="tactic">apply</span> (HU c1); assumption.<br>
+      &nbsp;&nbsp;- <span class="tactic">apply</span> (HV c1); assumption. <span class="comment">(* ✓ *)</span><br>
+      <span class="keyword">Qed.</span>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 5: Self-Consistency -->
+<div class="panel" id="panel-5">
+  <div class="card">
+    <h2>Self-Modeling & Fixed Points</h2>
+    <p><strong>What's proved (partially):</strong> A sufficiently large model can approximately predict its own output — it can "simulate itself." This is a fixed-point theorem. But PERFECT self-prediction is impossible (diagonal argument, like Gödel's incompleteness).</p>
+
+    <div class="insight">
+      <strong>Why it matters:</strong> This explains meta-cognition in LLMs — they can reason about what they'd say. But there's always a "self-knowledge gap." No model can perfectly know itself on all inputs, just like no formal system can prove its own consistency.
+    </div>
+
+    <canvas id="self-canvas" width="700" height="400"></canvas>
+    
+    <div class="controls">
+      <label>Model capacity:</label>
+      <input type="range" id="capacity-slider" min="10" max="100" value="50" oninput="updateSelf()">
+      <label>Query complexity:</label>
+      <input type="range" id="complexity-slider" min="10" max="100" value="30" oninput="updateSelf()">
+      <button onclick="animateSelf()">▶ Self-Predict</button>
+    </div>
+    
+    <div class="value-display" id="self-info"></div>
+
+    <div class="proof-box">
+      <span class="keyword">Theorem</span> self_consistency_possible :<br>
+      &nbsp;&nbsp;∀ ε > 0, ∃ model, self_consistent model ε.<br>
+      <span class="keyword">Proof.</span><br>
+      &nbsp;&nbsp;<span class="comment">(* By universal_approximation: the function *)</span><br>
+      &nbsp;&nbsp;<span class="comment">(* ctx ↦ output_distribution model ctx *)</span><br>
+      &nbsp;&nbsp;<span class="comment">(* can be approximated by some model, *)</span><br>
+      &nbsp;&nbsp;<span class="comment">(* including on inputs encoding the model itself. *)</span><br>
+      &nbsp;&nbsp;<span class="comment">(* This is a fixed-point argument... *)</span><br>
+      <span class="keyword">Admitted.</span> <span class="comment">(* Deep result — needs careful construction *)</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// === NAVIGATION ===
+function showPanel(idx) {
+  document.querySelectorAll('.panel').forEach((p, i) => {
+    p.classList.toggle('active', i === idx);
+  });
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+  });
+}
+
+// === PANEL 0: KL DIVERGENCE ===
+let klP = [0.1, 0.3, 0.4, 0.15, 0.05];
+let klQ = [0.2, 0.2, 0.2, 0.2, 0.2];
+let klDragging = -1;
+
+function drawKL() {
+  const canvas = document.getElementById('kl-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const n = klP.length;
+  const barW = 40;
+  const gap = 20;
+  const groupW = barW * 2 + gap;
+  const startX = (W - n * groupW) / 2;
+  const maxH = H - 100;
+
+  // Background grid
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 0.5;
+  for (let y = 0; y <= 1; y += 0.2) {
+    const py = H - 50 - y * (maxH - 50);
+    ctx.beginPath();
+    ctx.moveTo(40, py);
+    ctx.lineTo(W - 20, py);
+    ctx.stroke();
+    ctx.fillStyle = '#666';
+    ctx.font = '11px monospace';
+    ctx.fillText(y.toFixed(1), 5, py + 4);
+  }
+
+  // Draw bars
+  for (let i = 0; i < n; i++) {
+    const x = startX + i * groupW;
+    
+    // P bar (true distribution)
+    const pH = klP[i] * (maxH - 50);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(x, H - 50 - pH, barW, pH);
+    ctx.strokeStyle = '#2d8a4e';
+    ctx.strokeRect(x, H - 50 - pH, barW, pH);
+    
+    // Q bar (model distribution)
+    const qH = klQ[i] * (maxH - 50);
+    ctx.fillStyle = '#7873f5';
+    ctx.fillRect(x + barW + gap/2, H - 50 - qH, barW, qH);
+    ctx.strokeStyle = '#5550c9';
+    ctx.strokeRect(x + barW + gap/2, H - 50 - qH, barW, qH);
+    
+    // Labels
+    ctx.fillStyle = '#999';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Token ${i}`, x + groupW/2, H - 20);
+  }
+
+  // Legend
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#4ade80';
+  ctx.fillRect(W - 180, 20, 14, 14);
+  ctx.fillStyle = '#ccc';
+  ctx.fillText('P (true)', W - 160, 32);
+  ctx.fillStyle = '#7873f5';
+  ctx.fillRect(W - 180, 42, 14, 14);
+  ctx.fillStyle = '#ccc';
+  ctx.fillText('Q (model) — drag me!', W - 160, 54);
+
+  // Compute KL
+  let kl = 0;
+  let crossEnt = 0;
+  let ent = 0;
+  for (let i = 0; i < n; i++) {
+    if (klP[i] > 0 && klQ[i] > 0) {
+      kl += klP[i] * Math.log(klP[i] / klQ[i]);
+      crossEnt += -klP[i] * Math.log(klQ[i]);
+    }
+    if (klP[i] > 0) {
+      ent += -klP[i] * Math.log(klP[i]);
+    }
+  }
+
+  // KL bar visualization
+  const klBarY = 75;
+  const klBarW = Math.min(kl * 200, W - 100);
+  ctx.fillStyle = kl < 0.01 ? '#4ade80' : kl < 0.5 ? '#fbbf24' : '#ef4444';
+  ctx.fillRect(50, klBarY, Math.max(klBarW, 2), 20);
+  ctx.strokeStyle = '#666';
+  ctx.strokeRect(50, klBarY, W - 100, 20);
+  
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`KL(P‖Q) = ${kl.toFixed(4)} ≥ 0 ✓`, 50, klBarY - 8);
+  
+  document.getElementById('kl-values').innerHTML = 
+    `H(P) = ${ent.toFixed(4)} bits | H(P,Q) = ${crossEnt.toFixed(4)} bits | KL = H(P,Q) - H(P) = ${kl.toFixed(4)} ≥ 0 ${kl < 0.01 ? '🎯 OPTIMAL!' : ''}`;
+}
+
+function handleKLMouse(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const H = canvas.height;
+  const n = klQ.length;
+  const barW = 40;
+  const gap = 20;
+  const groupW = barW * 2 + gap;
+  const startX = (canvas.width - n * groupW) / 2;
+  const maxH = H - 100;
+
+  if (e.type === 'mousedown') {
+    for (let i = 0; i < n; i++) {
+      const x = startX + i * groupW + barW + gap/2;
+      if (mx >= x && mx <= x + barW) {
+        klDragging = i;
+        break;
+      }
+    }
+  } else if (e.type === 'mousemove' && klDragging >= 0) {
+    let val = 1 - (my - 50) / (maxH - 50);
+    val = Math.max(0.01, Math.min(0.98, val));
+    klQ[klDragging] = val;
+    // Renormalize
+    const sum = klQ.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < n; i++) klQ[i] /= sum;
+    drawKL();
+  } else if (e.type === 'mouseup') {
+    klDragging = -1;
+  }
+}
+
+function resetKL() {
+  klQ = [0.2, 0.2, 0.2, 0.2, 0.2];
+  drawKL();
+}
+function matchKL() {
+  klQ = [...klP];
+  drawKL();
+}
+
+// === PANEL 1: SIMPLICIAL COMPLEX ===
+let tokens = [];
+let attentionWeights = [];
+let simplexThreshold = 0.3;
+
+function initSimplex() {
+  tokens = [];
+  for (let i = 0; i < 6; i++) {
+    tokens.push({
+      x: 150 + Math.cos(i * Math.PI * 2 / 6) * 150,
+      y: 225 + Math.sin(i * Math.PI * 2 / 6) * 150,
+      label: `t${i}`
+    });
+  }
+  randomizeAttention();
+}
+
+function randomizeAttention() {
+  const n = tokens.length;
+  attentionWeights = [];
+  for (let i = 0; i < n; i++) {
+    attentionWeights[i] = [];
+    for (let j = 0; j < n; j++) {
+      attentionWeights[i][j] = i === j ? 1 : Math.random();
+    }
+    // Normalize row
+    const sum = attentionWeights[i].reduce((a, b) => a + b, 0);
+    for (let j = 0; j < n; j++) attentionWeights[i][j] /= sum;
+  }
+  updateSimplex();
+}
+
+function addToken() {
+  const n = tokens.length;
+  if (n >= 10) return;
+  tokens.push({
+    x: 100 + Math.random() * 500,
+    y: 80 + Math.random() * 320,
+    label: `t${n}`
+  });
+  randomizeAttention();
+}
+
+function updateSimplex() {
+  simplexThreshold = document.getElementById('threshold-slider').value / 100;
+  document.getElementById('threshold-val').textContent = simplexThreshold.toFixed(2);
+  drawSimplex();
+}
+
+function drawSimplex() {
+  const canvas = document.getElementById('simplex-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const n = tokens.length;
+  if (n === 0) return;
+
+  // Find all edges (2-simplices)
+  let edges = [];
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (attentionWeights[i][j] >= simplexThreshold && 
+          attentionWeights[j][i] >= simplexThreshold) {
+        edges.push([i, j]);
+      }
+    }
+  }
+
+  // Find all triangles (3-simplices)
+  let triangles = [];
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      for (let k = j + 1; k < n; k++) {
+        if (edges.some(e => e[0]===i && e[1]===j) &&
+            edges.some(e => e[0]===i && e[1]===k) &&
+            edges.some(e => e[0]===j && e[1]===k)) {
+          triangles.push([i, j, k]);
+        }
+      }
+    }
+  }
+
+  // Draw triangles (filled)
+  triangles.forEach(([i, j, k]) => {
+    ctx.beginPath();
+    ctx.moveTo(tokens[i].x, tokens[i].y);
+    ctx.lineTo(tokens[j].x, tokens[j].y);
+    ctx.lineTo(tokens[k].x, tokens[k].y);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 110, 196, 0.15)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 110, 196, 0.4)';
+    ctx.stroke();
+  });
+
+  // Draw edges
+  edges.forEach(([i, j]) => {
+    ctx.beginPath();
+    ctx.moveTo(tokens[i].x, tokens[i].y);
+    ctx.lineTo(tokens[j].x, tokens[j].y);
+    ctx.strokeStyle = '#7873f5';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  });
+
+  // Draw tokens (vertices)
+  tokens.forEach((tok, i) => {
+    ctx.beginPath();
+    ctx.arc(tok.x, tok.y, 18, 0, Math.PI * 2);
+    ctx.fillStyle = '#1a2a1a';
+    ctx.fill();
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tok.label, tok.x, tok.y);
+  });
+
+  // Compute Betti numbers (simplified)
+  let visited = new Array(n).fill(false);
+  let components = 0;
+  function dfs(node) {
+    visited[node] = true;
+    for (let [a, b] of edges) {
+      if (a === node && !visited[b]) dfs(b);
+      if (b === node && !visited[a]) dfs(a);
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    if (!visited[i]) { dfs(i); components++; }
+  }
+  let beta1 = Math.max(0, edges.length - n + components);
+
+  document.getElementById('simplex-info').innerHTML = 
+    `Vertices: ${n} | Edges: ${edges.length} | Triangles: ${triangles.length} | ` +
+    `β₀ (components): ${components} | β₁ (loops): ${beta1} | ` +
+    `<span style="color:#ff6ec4">Face preservation: every sub-face of a simplex is also a simplex ✓</span>`;
+}
+
+// Drag tokens
+let simplexDragging = -1;
+function handleSimplexMouse(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  if (e.type === 'mousedown') {
+    for (let i = 0; i < tokens.length; i++) {
+      const dx = mx - tokens[i].x, dy = my - tokens[i].y;
+      if (dx*dx + dy*dy < 400) { simplexDragging = i; break; }
+    }
+  } else if (e.type === 'mousemove' && simplexDragging >= 0) {
+    tokens[simplexDragging].x = mx;
+    tokens[simplexDragging].y = my;
+    drawSimplex();
+  } else if (e.type === 'mouseup') {
+    simplexDragging = -1;
+  }
+}
+
+// === PANEL 2: FEATURE ORTHOGONALITY ===
+let ablateA = false, ablateB = false;
+
+function updateOrtho() {
+  const angle = parseInt(document.getElementById('feat-angle').value);
+  document.getElementById('angle-val').textContent = angle + '°';
+  drawOrtho();
+}
+
+function toggleAblate(which) {
+  if (which === 'a') { ablateA = !ablateA; document.getElementById('ablate-a-btn').classList.toggle('active-btn'); }
+  if (which === 'b') { ablateB = !ablateB; document.getElementById('ablate-b-btn').classList.toggle('active-btn'); }
+  drawOrtho();
+}
+
+function resetOrtho() {
+  ablateA = false; ablateB = false;
+  document.getElementById('ablate-a-btn').classList.remove('active-btn');
+  document.getElementById('ablate-b-btn').classList.remove('active-btn');
+  document.getElementById('feat-a').value = 60;
+  document.getElementById('feat-b').value = 40;
+  document.getElementById('feat-angle').value = 90;
+  updateOrtho();
+}
+
+function drawOrtho() {
+  const canvas = document.getElementById('ortho-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const cx = W / 2, cy = H / 2;
+  let a = parseInt(document.getElementById('feat-a').value) / 100;
+  let b = parseInt(document.getElementById('feat-b').value) / 100;
+  const angleDeg = parseInt(document.getElementById('feat-angle').value);
+  const angleRad = angleDeg * Math.PI / 180;
+
+  const dirA = { x: 1, y: 0 };
+  const dirB = { x: Math.cos(angleRad), y: -Math.sin(angleRad) };
+  const scale = 150;
+
+  let effectiveA = ablateA ? 0 : a;
+  let effectiveB = ablateB ? 0 : b;
+
+  const dot = dirA.x * dirB.x + dirA.y * dirB.y;
+  let leakageOnB = 0, leakageOnA = 0;
+  if (ablateA) { leakageOnB = -a * dot; }
+  if (ablateB) { leakageOnA = -b * dot; }
+
+  // Draw grid
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 0.5;
+  for (let i = -3; i <= 3; i++) {
+    ctx.beginPath(); ctx.moveTo(cx + i * 50, 0); ctx.lineTo(cx + i * 50, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, cy + i * 50); ctx.lineTo(W, cy + i * 50); ctx.stroke();
+  }
+
+  // Draw feature direction A
+  ctx.beginPath();
+  ctx.moveTo(cx - dirA.x * scale * 1.5, cy - dirA.y * scale * 1.5);
+  ctx.lineTo(cx + dirA.x * scale * 1.5, cy + dirA.y * scale * 1.5);
+  ctx.strokeStyle = ablateA ? '#555' : '#4ade80';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw feature direction B
+  ctx.beginPath();
+  ctx.moveTo(cx - dirB.x * scale * 1.5, cy - dirB.y * scale * 1.5);
+  ctx.lineTo(cx + dirB.x * scale * 1.5, cy + dirB.y * scale * 1.5);
+  ctx.strokeStyle = ablateB ? '#555' : '#7873f5';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw the representation vector
+  const repX = effectiveA * dirA.x + effectiveB * dirB.x;
+  const repY = effectiveA * dirA.y + effectiveB * dirB.y;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + repX * scale, cy - repY * scale);
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Arrow head
+  const arrowLen = 10;
+  const arrowAngle = Math.atan2(-repY, repX);
+  ctx.beginPath();
+  ctx.moveTo(cx + repX * scale, cy - repY * scale);
+  ctx.lineTo(cx + repX * scale - arrowLen * Math.cos(arrowAngle - 0.3), 
+             cy - repY * scale + arrowLen * Math.sin(arrowAngle - 0.3));
+  ctx.moveTo(cx + repX * scale, cy - repY * scale);
+  ctx.lineTo(cx + repX * scale - arrowLen * Math.cos(arrowAngle + 0.3), 
+             cy - repY * scale + arrowLen * Math.sin(arrowAngle + 0.3));
+  ctx.stroke();
+
+  // Draw angle arc
+  ctx.beginPath();
+  ctx.arc(cx, cy, 40, -angleRad, 0);
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(`${angleDeg}°`, cx + 45, cy - 10);
+
+  // Labels
+  ctx.font = 'bold 14px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#4ade80';
+  ctx.fillText('Feature A (e.g. "happy")', cx + dirA.x * scale * 1.5 + 5, cy - 10);
+  ctx.fillStyle = '#7873f5';
+  ctx.fillText('Feature B (e.g. "formal")', cx + dirB.x * scale * 1.2 + 5, cy - dirB.y * scale * 1.2 - 10);
+
+  // Info
+  const isOrthogonal = angleDeg === 90;
+  let info = `Angle: ${angleDeg}° | cos(angle) = ${dot.toFixed(3)} | `;
+  info += `Feature A activation: ${(effectiveA + leakageOnA).toFixed(2)} | `;
+  info += `Feature B activation: ${(effectiveB + leakageOnB).toFixed(2)}`;
+  
+  if (ablateA || ablateB) {
+    if (isOrthogonal) {
+      info += ` | <span style="color:#4ade80">✓ ZERO leakage (orthogonal!)</span>`;
+    } else {
+      info += ` | <span style="color:#ef4444">⚠ Leakage = ${Math.abs(dot).toFixed(3)} (not orthogonal!)</span>`;
+    }
+  }
+  document.getElementById('ortho-info').innerHTML = info;
+}
+
+// === PANEL 3: LAYER PRESERVATION ===
+let layerAnimating = false;
+let layerAnimFrame = 0;
+
+function updateLayers() { drawLayers(); }
+
+function drawLayers() {
+  const canvas = document.getElementById('layer-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const numTokens = parseInt(document.getElementById('num-tokens').value);
+  const numLayers = parseInt(document.getElementById('num-layers').value);
+  const layerW = (W - 100) / (numLayers + 2);
+  const tokenH = 30;
+  const tokenGap = 8;
+  const startY = (H - numTokens * (tokenH + tokenGap)) / 2;
+
+  for (let l = 0; l <= numLayers + 1; l++) {
+    const x = 50 + l * layerW;
+    
+    ctx.fillStyle = '#666';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    if (l === 0) ctx.fillText('Input', x + layerW/2, 25);
+    else if (l === numLayers + 1) ctx.fillText('Output', x + layerW/2, 25);
+    else ctx.fillText(`Layer ${l}`, x + layerW/2, 25);
+
+    for (let t = 0; t < numTokens; t++) {
+      const y = startY + t * (tokenH + tokenGap);
+      let color = l === 0 ? '#4ade80' : l === numLayers + 1 ? '#ff6ec4' : '#7873f5';
+      if (layerAnimating && l === layerAnimFrame) color = '#fbbf24';
+
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.3;
+      ctx.fillRect(x + 5, y, layerW - 10, tokenH);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = color;
+      ctx.strokeRect(x + 5, y, layerW - 10, tokenH);
+      ctx.fillStyle = color;
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`t${t}`, x + layerW/2, y + tokenH/2 + 4);
+    }
+
+    if (l < numLayers + 1) {
+      for (let t = 0; t < numTokens; t++) {
+        const y = startY + t * (tokenH + tokenGap) + tokenH / 2;
+        ctx.beginPath();
+        ctx.moveTo(x + layerW - 5, y);
+        ctx.lineTo(x + layerW + 5, y);
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`n=${numTokens}`, x + layerW/2, H - 20);
+  }
+
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('length preserved at every layer ✓', W/2, H - 45);
+
+  document.getElementById('layer-info').innerHTML = 
+    `Input: ${numTokens} tokens → ${numLayers} layers → Output: ${numTokens} tokens. ` +
+    `Proved by induction: base case (0 layers = identity) + inductive step (each layer preserves length).`;
+}
+
+function animateLayers() {
+  layerAnimating = true;
+  layerAnimFrame = 0;
+  const numLayers = parseInt(document.getElementById('num-layers').value);
+  
+  function step() {
+    drawLayers();
+    layerAnimFrame++;
+    if (layerAnimFrame <= numLayers + 1) {
+      setTimeout(step, 400);
+    } else {
+      layerAnimating = false;
+      drawLayers();
+    }
+  }
+  step();
+}
+
+// === PANEL 4: TOPOLOGY & CONTINUITY ===
+let topoPoints = [];
+
+function initTopo() {
+  topoPoints = [{ x: 350, y: 225, label: 'ctx₀' }];
+  for (let i = 0; i < 8; i++) {
+    topoPoints.push({
+      x: 150 + Math.random() * 400,
+      y: 80 + Math.random() * 320,
+      label: `ctx${i+1}`
+    });
+  }
+}
+
+function addContext() {
+  topoPoints.push({
+    x: 100 + Math.random() * 500,
+    y: 80 + Math.random() * 320,
+    label: `ctx${topoPoints.length}`
+  });
+  updateTopo();
+}
+
+function resetTopo() { initTopo(); updateTopo(); }
+
+function updateTopo() {
+  const eps = parseInt(document.getElementById('epsilon-slider').value) / 100;
+  document.getElementById('eps-val').textContent = eps.toFixed(2);
+  drawTopo();
+}
+
+function drawTopo() {
+  const canvas = document.getElementById('topo-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const eps = parseInt(document.getElementById('epsilon-slider').value);
+  const center = topoPoints[0];
+
+  // Draw epsilon ball
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, eps * 2, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(120, 115, 245, 0.1)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(120, 115, 245, 0.5)';
+  ctx.setLineDash([5, 5]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#7873f5';
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`ε-ball (radius=${(eps/100).toFixed(2)})`, center.x, center.y - eps * 2 - 10);
+
+  let insideCount = 0;
+  topoPoints.forEach((pt, i) => {
+    if (i === 0) return;
+    const dx = pt.x - center.x, dy = pt.y - center.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < eps * 2) {
+      insideCount++;
+      ctx.beginPath();
+      ctx.moveTo(center.x, center.y);
+      ctx.lineTo(pt.x, pt.y);
+      ctx.strokeStyle = 'rgba(74, 222, 128, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  });
+
+  topoPoints.forEach((pt, i) => {
+    const dx = pt.x - center.x, dy = pt.y - center.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const inside = i === 0 || dist < eps * 2;
+
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, i === 0 ? 10 : 7, 0, Math.PI * 2);
+    ctx.fillStyle = i === 0 ? '#fbbf24' : inside ? '#4ade80' : '#ef4444';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = i === 0 ? 2 : 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#ccc';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(pt.label, pt.x, pt.y - 12);
+  });
+
+  ctx.fillStyle = '#999';
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Upward-closed: if ctx ∈ U and ctx is prefix of ctx\', then ctx\' ∈ U', 20, H - 30);
+  ctx.fillText('Continuity: nearby contexts → nearby distributions', 20, H - 12);
+
+  document.getElementById('topo-info').innerHTML = 
+    `Center: ${center.label} | ε = ${(eps/100).toFixed(2)} | ` +
+    `Contexts in ball: ${insideCount}/${topoPoints.length - 1} | ` +
+    `<span style="color:#4ade80">Continuity: small Δcontext → small Δdistribution ✓</span>`;
+}
+
+let topoDragging = -1;
+function handleTopoMouse(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  if (e.type === 'mousedown') {
+    for (let i = 0; i < topoPoints.length; i++) {
+      const dx = mx - topoPoints[i].x, dy = my - topoPoints[i].y;
+      if (dx*dx + dy*dy < 200) { topoDragging = i; break; }
+    }
+  } else if (e.type === 'mousemove' && topoDragging >= 0) {
+    topoPoints[topoDragging].x = mx;
+    topoPoints[topoDragging].y = my;
+    drawTopo();
+  } else if (e.type === 'mouseup') {
+    topoDragging = -1;
+  }
+}
+
+// === PANEL 5: SELF-CONSISTENCY ===
+let selfAnimating = false;
+
+function updateSelf() { drawSelf(); }
+
+function drawSelf() {
+  const canvas = document.getElementById('self-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const capacity = parseInt(document.getElementById('capacity-slider').value);
+  const complexity = parseInt(document.getElementById('complexity-slider').value);
+  const cx = W / 2, cy = H / 2;
+
+  // Draw the model as a circle
+  const modelR = 80;
+  ctx.beginPath();
+  ctx.arc(cx, cy, modelR, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(120, 115, 245, 0.1)';
+  ctx.fill();
+  ctx.strokeStyle = '#7873f5';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  ctx.fillStyle = '#7873f5';
+  ctx.font = 'bold 14px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Model M', cx, cy - 5);
+  ctx.font = '11px monospace';
+  ctx.fillText(`capacity: ${capacity}`, cx, cy + 15);
+
+  // Self-prediction loop arrow
+  const loopR = 50;
+  ctx.beginPath();
+  ctx.arc(cx, cy - modelR - loopR + 10, loopR, 0.3, Math.PI * 2 - 0.3);
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  const arrowX = cx + loopR * Math.cos(0.3);
+  const arrowY = cy - modelR - loopR + 10 + loopR * Math.sin(0.3);
+  ctx.beginPath();
+  ctx.moveTo(arrowX, arrowY);
+  ctx.lineTo(arrowX - 8, arrowY - 8);
+  ctx.moveTo(arrowX, arrowY);
+  ctx.lineTo(arrowX + 5, arrowY - 10);
+  ctx.strokeStyle = '#fbbf24';
+  ctx.stroke();
+
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('Self-prediction', cx, cy - modelR - loopR * 2 + 5);
+
+  // Accuracy meter
+  const accuracy = Math.min(0.99, capacity / (capacity + complexity));
+  const meterX = cx - 100, meterY = cy + modelR + 40;
+  const meterW = 200, meterH = 20;
+
+  ctx.fillStyle = '#222';
+  ctx.fillRect(meterX, meterY, meterW, meterH);
+  ctx.fillStyle = accuracy > 0.8 ? '#4ade80' : accuracy > 0.5 ? '#fbbf24' : '#ef4444';
+  ctx.fillRect(meterX, meterY, meterW * accuracy, meterH);
+  ctx.strokeStyle = '#666';
+  ctx.strokeRect(meterX, meterY, meterW, meterH);
+
+  ctx.fillStyle = '#fff';
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`Self-prediction accuracy: ${(accuracy * 100).toFixed(1)}%`, cx, meterY + meterH + 18);
+
+  const gap = 1 - accuracy;
+  ctx.fillStyle = '#ef4444';
+  ctx.fillText(`Self-knowledge gap: ${(gap * 100).toFixed(1)}% (always > 0 by diagonal argument)`, cx, meterY + meterH + 38);
+
+  // Impossible region
+  ctx.beginPath();
+  ctx.moveTo(cx + 120, cy - 30);
+  ctx.lineTo(cx + 200, cy - 60);
+  ctx.strokeStyle = '#ef4444';
+  ctx.setLineDash([3, 3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  ctx.fillStyle = '#ef4444';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Perfect self-prediction', cx + 205, cy - 65);
+  ctx.fillText('is IMPOSSIBLE (Gödel-like)', cx + 205, cy - 50);
+
+  ctx.fillStyle = '#ff6ec4';
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`Query complexity: ${complexity}`, cx, cy + modelR + 20);
+
+  document.getElementById('self-info').innerHTML = 
+    `Capacity: ${capacity} | Complexity: ${complexity} | ` +
+    `Accuracy: ${(accuracy * 100).toFixed(1)}% | Gap: ${(gap * 100).toFixed(1)}% | ` +
+    (accuracy > 0.9 ? '<span style="color:#4ade80">Approximately self-consistent ✓</span>' :
+     '<span style="color:#fbbf24">Insufficient capacity for self-modeling</span>');
+}
+
+function animateSelf() {
+  selfAnimating = true;
+  let frame = 0;
+  const canvas = document.getElementById('self-canvas');
+  const ctx = canvas.getContext('2d');
+  
+  function step() {
+    drawSelf();
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const t = frame / 30;
+    
+    for (let i = 0; i < 3; i++) {
+      const bx = cx + Math.cos(t + i * 2) * 30;
+      const by = cy + Math.sin(t + i * 2) * 30;
+      ctx.beginPath();
+      ctx.arc(bx, by, 5 + Math.sin(t * 2 + i) * 3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(251, 191, 36, ${0.3 + Math.sin(t + i) * 0.2})`;
+      ctx.fill();
+    }
+    
+    frame++;
+    if (frame < 90) {
+      requestAnimationFrame(step);
+    } else {
+      selfAnimating = false;
+    }
+  }
+  step();
+}
+
+// === INITIALIZATION ===
+window.onload = function() {
+  // Set up KL canvas
+  const klCanvas = document.getElementById('kl-canvas');
+  klCanvas.addEventListener('mousedown', (e) => handleKLMouse(e, klCanvas));
+  klCanvas.addEventListener('mousemove', (e) => handleKLMouse(e, klCanvas));
+  klCanvas.addEventListener('mouseup', (e) => handleKLMouse(e, klCanvas));
+  klCanvas.addEventListener('mouseleave', (e) => { klDragging = -1; });
+  drawKL();
+
+  // Set up Simplex canvas
+  initSimplex();
+  const simplexCanvas = document.getElementById('simplex-canvas');
+  simplexCanvas.addEventListener('mousedown', (e) => handleSimplexMouse(e, simplexCanvas));
+  simplexCanvas.addEventListener('mousemove', (e) => handleSimplexMouse(e, simplexCanvas));
+  simplexCanvas.addEventListener('mouseup', (e) => handleSimplexMouse(e, simplexCanvas));
+  simplexCanvas.addEventListener('mouseleave', () => { simplexDragging = -1; });
+
+  // Set up Ortho canvas
+  drawOrtho();
+
+  // Set up Layer canvas
+  drawLayers();
+
+  // Set up Topo canvas
+  initTopo();
+  const topoCanvas = document.getElementById('topo-canvas');
+  topoCanvas.addEventListener('mousedown', (e) => handleTopoMouse(e, topoCanvas));
+  topoCanvas.addEventListener('mousemove', (e) => handleTopoMouse(e, topoCanvas));
+  topoCanvas.addEventListener('mouseup', (e) => handleTopoMouse(e, topoCanvas));
+  topoCanvas.addEventListener('mouseleave', () => { topoDragging = -1; });
+  drawTopo();
+
+  // Set up Self canvas
+  drawSelf();
+};
+</script>
+</body>
+</html>

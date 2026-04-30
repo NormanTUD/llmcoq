@@ -342,11 +342,10 @@ Axiom vec_dot_scale_r : forall n (u v : Vec n) (a : R),
 Axiom unit_vec_self_dot : forall (c : ConceptDirection),
   vec_dot dim_model (cd_direction c) (cd_direction c) = 1%R.
 
-(* Add this axiom to your definitions section *)
+(* Add this near line 45 *)
 Axiom vec_dot_comm : forall n (u v : Vec n),
   vec_dot n u v = vec_dot n v u.
 
-(* Updated Theorem Proof *)
 Theorem ablation_preserves_orthogonal :
   forall model dict ctx i j ci cj,
     valid_context ctx ->
@@ -361,12 +360,14 @@ Proof.
   unfold ablate_feature.
   rewrite Hi.
   unfold concept_activation.
-  rewrite vec_dot_add_r.
-  rewrite vec_dot_scale_r.
-  (* This now works because vec_dot_comm is defined *)
-  rewrite vec_dot_comm.
-  rewrite Horth.
-  lra.
+  rewrite vec_dot_add_r.    (* Distributes dot product over addition *)
+  rewrite vec_dot_scale_r.  (* Pulls the scalar -alpha out *)
+  
+  (* The crucial step: use commutativity to align the goal with Horth *)
+  rewrite (vec_dot_comm dim_model (cd_direction cj) (cd_direction ci)).
+  
+  rewrite Horth.            (* Now matches: vec_dot ... ci cj = 0 *)
+  lra.                      (* Simplifies 0 * x and finishes the proof *)
 Qed.
 
 (* THEOREM: Ablation of feature i removes feature i *)

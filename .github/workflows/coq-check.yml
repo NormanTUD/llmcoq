@@ -17,13 +17,12 @@ jobs:
           sudo apt-get update -y -q
           sudo apt-get install -y -q --no-install-recommends coq
 
-      - name: Verify all .v files compile
+      - name: Compile all .v files in order
         run: |
-          EXIT_CODE=0
-          FILES=$(find . -name "*.v" -type f)
-
+          set -e
+          FILES=$(find . -name "*.v" -type f | sort)
           if [ -z "$FILES" ]; then
-            echo "No .v files found in the repository."
+            echo "No .v files found."
             exit 1
           fi
 
@@ -32,14 +31,8 @@ jobs:
             if coqc "$file"; then
               echo "✅ $file compiled successfully."
             else
-              echo "❌ $file failed to compile."
-              EXIT_CODE=1
+              echo "::error::Compilation failed for $file"
+              exit 1
             fi
             echo "::endgroup::"
           done
-
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "::error::One or more .v files failed to compile."
-          fi
-
-          exit $EXIT_CODE

@@ -27,6 +27,7 @@ Require Import Coq.micromega.Lra.
 Require Import Coq.micromega.Lia.
 
 From base Require Import base.
+From base Require Import attention_geometry.
 From base Require Import refinement.
 From base Require Import topology.
 From base Require Import semantics.

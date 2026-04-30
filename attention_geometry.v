@@ -193,12 +193,11 @@ Definition example_complex : SimplicialComplex :=
   filter (fun simplex => is_simplex_bool example_attention simplex 0.5)
          (powerset (seq 0 max_seq_length)).
 
-Lemma example_complex_valid :
+Lemma example_complex_valid : 
   valid_simplicial_complex example_complex example_attention 0.5.
 Proof.
-  (* Unfold the property to reveal the (A /\ B) structure *)
-  unfold valid_simplicial_complex.
-  (* If it's a Record, 'split' works; if it's a definition, this ensures it's ready *)
+  (* Unfold and reduce to ensure the /\ is visible *)
+  unfold valid_simplicial_complex; simpl.
   split.
 
 (* ============================================================ *)

@@ -10,6 +10,8 @@ Require Import Coq.Lists.List.
 Require Import Coq.Arith.PeanoNat.
 Require Import Coq.micromega.Lra.
 Require Import Coq.micromega.Lia.
+Require Import Coq.Lists.List.
+Import ListNotations.
 
 From base Require Import base.
 

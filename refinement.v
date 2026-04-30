@@ -30,7 +30,7 @@ Lemma context_layer_norm_length : forall ctx,
 Proof.
   intro ctx.
   unfold context_layer_norm.
-  apply length_map.
+  apply map_length.
 Qed.
 
 Lemma combine_length_eq : forall (A B : Type) (l1 : list A) (l2 : list B),
@@ -51,7 +51,7 @@ Lemma context_add'_length : forall ctx1 ctx2,
 Proof.
   intros ctx1 ctx2 Hlen.
   unfold context_add'.
-  rewrite length_map.
+  rewrite map_length.
   apply combine_length_eq.
   exact Hlen.
 Qed.

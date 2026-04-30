@@ -1,0 +1,3 @@
+for i in *.v; do
+	cp "$i" "$i.txt"
+done

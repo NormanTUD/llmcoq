@@ -421,7 +421,11 @@ Proof.
   unfold concept_activation.
   rewrite vec_dot_add_r.
   rewrite vec_dot_scale_r.
-  rewrite Horth.
+  
+  (* Add this line to fix the matching error *)
+  rewrite (vec_dot_comm dim_model (cd_direction cj) (cd_direction ci)).
+  
+  rewrite Horth. 
   lra.
 Qed.
 

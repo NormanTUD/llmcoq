@@ -112,7 +112,7 @@ Lemma extend_context_valid : forall ctx emb,
 Proof.
   intros ctx emb [Hlen Hpos] Hext.
   unfold valid_context, context_length in *.
-  rewrite app_length. simpl.
+  rewrite length_app. simpl. (* Updated notation here *)
   split.
   - unfold context_extendable, context_length in Hext. lia.
   - lia.

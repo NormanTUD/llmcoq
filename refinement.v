@@ -140,11 +140,11 @@ Proof.
       apply IH.
       * (* Prove the extended context is valid *)
         unfold valid_context, context_length in *.
-        rewrite app_length. simpl.
+        rewrite length_app. simpl.
         lia.
       * (* Prove the length constraint holds for the extended context *)
         unfold context_length in *.
-        rewrite app_length. simpl.
+        rewrite length_app. simpl.
         lia.
 Qed.
 

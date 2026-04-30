@@ -193,12 +193,46 @@ Definition example_complex : SimplicialComplex :=
   filter (fun simplex => is_simplex_bool example_attention simplex 0.5)
          (powerset (seq 0 max_seq_length)).
 
-Lemma example_complex_valid : 
+Lemma is_simplex_face_preservation :
+  forall (attn : AttentionWeight) (simplex face : Simplex) (threshold : R),
+    is_simplex attn simplex threshold ->
+    incl face simplex ->
+    is_simplex attn face threshold.
+Proof.
+  intros attn simplex face threshold H_sim H_incl.
+  unfold is_simplex in *.
+  intros i j H_i_face H_j_face H_neq.
+  (* Since face is included in simplex, i and j are also in simplex *)
+  apply H_incl in H_i_face.
+  apply H_incl in H_j_face.
+  (* Apply the original simplex property *)
+  apply H_sim; assumption.
+Qed.
+
+Lemma example_complex_valid :
   valid_simplicial_complex example_complex example_attention 0.5.
 Proof.
-  (* Unfold and reduce to ensure the /\ is visible *)
-  unfold valid_simplicial_complex; simpl.
+  unfold valid_simplicial_complex, example_complex.
+  (* Use Forall_forall to change the goal into a statement about any simplex in the list *)
+  apply Forall_forall.
+  intros simplex H_in_complex.
+  (* Now apply filter_In to get the properties of the filtered list *)
+  apply filter_In in H_in_complex as [H_in_powerset H_is_simplex_bool].
+  
+  (* Convert the boolean check back to the Prop needed for the goal *)
+  assert (H_is_simplex : is_simplex example_attention simplex 0.5).
+  { (* Proof that is_simplex_bool implies is_simplex *)
+    unfold is_simplex_bool in H_is_simplex_bool.
+    destruct (is_simplex_dec example_attention simplex 0.5); [assumption | discriminate]. }
+  
+  (* Now you have the core goal structure: is_simplex /\ forall subset... *)
   split.
+  - (* Part 1: current simplex is a simplex *)
+    exact H_is_simplex.
+  - (* Part 2: closure under subsets *)
+    intros subset H_incl.
+    apply is_simplex_face_preservation with (simplex := simplex); auto.
+Qed.
 
 (* ============================================================ *)
 (* PART IX: NEXT STEPS                                           *)

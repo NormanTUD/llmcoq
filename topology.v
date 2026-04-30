@@ -237,8 +237,8 @@ Qed.
 (* ============================================================ *)
 
 (* A perfect sheaf condition would say:                          *)
-(*   "The prediction at ctx is uniquely determined by the        *)
-(*    predictions at all extensions."                             *)
+(*   "The prediction at ctx is uniquely determined by the"        *)
+(*   "predictions at all extensions."                             *)
 (* For a transformer, this is trivially true (the model is       *)
 (* deterministic), but the INTERESTING sheaf condition is about   *)
 (* CONSISTENCY:                                                   *)

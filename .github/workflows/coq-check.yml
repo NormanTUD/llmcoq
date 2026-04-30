@@ -17,27 +17,7 @@ jobs:
           sudo apt-get update -y -q
           sudo apt-get install -y -q --no-install-recommends coq
 
-      - name: Compile all .v files in order
+      - name: Compile Coq files
         run: |
-          set -e
-          # Find files and sort them to ensure dependencies (like base.v) 
-          # are compiled before files that import them.
-          FILES=$(find . -name "*.v" -type f | sort)
-          
-          if [ -z "$FILES" ]; then
-            echo "No .v files found."
-            exit 1
-          fi
-
-          for file in $FILES; do
-            echo "::group::Compiling $file"
-            # Added -Q . base to tell Coq that the current directory 
-            # represents the logical library name 'base'
-            if coqc -Q . base "$file"; then
-              echo "✅ $file compiled successfully."
-            else
-              echo "::error::Compilation failed for $file"
-              exit 1
-            fi
-            echo "::endgroup::"
-          done
+          coq_makefile -f _CoqProject -o Makefile
+          make

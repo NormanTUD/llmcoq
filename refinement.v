@@ -467,6 +467,9 @@ Definition phase_transition (cap : Capability) (epsilon : R) : Prop :=
     capability_emerges_at cap threshold epsilon /\
     capability_absent_below cap threshold epsilon.
 
+Parameter Vec_eq_dec : forall n (x y : Vec n), {x = y} + {x <> y}.
+Definition Embedding_eq_dec := Vec_eq_dec dim_model.
+
 (* ============================================================ *)
 (* END Version 0.4 — refinement.v                                *)
 (* ============================================================ *)

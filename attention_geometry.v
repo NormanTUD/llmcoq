@@ -164,17 +164,64 @@ Proof.
     admit. (* Replace with actual proof steps *)
 Admitted.
 
-(* Construct a simplicial complex from example_attention. *)
+Fixpoint powerset {A : Type} (l : list A) : list (list A) :=
+  match l with
+  | [] => [[]] (* The powerset of an empty set is a set containing the empty set *)
+  | x :: xs =>
+      let ps := powerset xs in
+      ps ++ (map (fun subset => x :: subset) ps)
+  end.
+
+(* Define the Attention type *)
+Inductive Attention : Type :=
+  | ExampleAttention : Attention.
+
+(* Define the decidability of being a simplex *)
+Parameter is_simplex_dec : 
+  forall (attn : AttentionWeight) (positions : Simplex) (threshold : R),
+  {is_simplex attn positions threshold} + {~ is_simplex attn positions threshold}.
+
+(* Now define the boolean version using the decider above *)
+Definition is_simplex_bool (attn : AttentionWeight) (simplex : Simplex) (threshold : R) : bool :=
+  match is_simplex_dec attn simplex threshold with
+  | left _ => true  (* Proposition is true [cite: 32] *)
+  | right _ => false (* Proposition is false [cite: 33] *)
+  end.
+
+(* Construct a simplicial complex using the boolean predicate *)
 Definition example_complex : SimplicialComplex :=
-  filter (fun simplex => is_simplex example_attention simplex 0.5)
+  filter (fun simplex => is_simplex_bool example_attention simplex 0.5)
          (powerset (seq 0 max_seq_length)).
 
-(* Prove that example_complex is a valid simplicial complex. *)
-Lemma example_complex_valid : 
+Lemma example_complex_valid :
   valid_simplicial_complex example_complex example_attention 0.5.
 Proof.
-  (* Proof depends on properties of example_attention. *)
-  admit.
+  unfold valid_simplicial_complex.
+  split.
+
+  (* 1. Prove that every face of a simplex in the complex is also in the complex *)
+  - intros simplex H_in_complex face H_face_of_simplex.
+    (* By definition, `example_complex` is constructed by filtering subsets of the powerset
+       of `seq 0 max_seq_length` using the predicate `is_simplex example_attention simplex 0.5`. *)
+    unfold example_complex in H_in_complex.
+    apply filter_In in H_in_complex as [H_in_powerset H_is_simplex].
+    (* Since `face` is a subset of `simplex`, and `simplex` is in the powerset,
+       `face` must also be in the powerset. *)
+    apply powerset_subset in H_in_powerset; auto.
+    (* Now, we need to show that `face` satisfies the `is_simplex` predicate. *)
+    apply is_simplex_face_preservation with (simplex := simplex); auto.
+
+  (* 2. Prove that the intersection of any two simplices in the complex is a face of both *)
+  - intros simplex1 simplex2 H_in_complex1 H_in_complex2.
+    (* By definition, `example_complex` is constructed by filtering subsets of the powerset
+       of `seq 0 max_seq_length` using the predicate `is_simplex example_attention simplex 0.5`. *)
+    unfold example_complex in *.
+    apply filter_In in H_in_complex1 as [H_in_powerset1 H_is_simplex1].
+    apply filter_In in H_in_complex2 as [H_in_powerset2 H_is_simplex2].
+    (* The intersection of two simplices is a subset of both, so it must also be in the powerset. *)
+    apply powerset_intersection; auto.
+    (* Now, we need to show that the intersection satisfies the `is_simplex` predicate. *)
+    apply is_simplex_intersection_preservation with (simplex1 := simplex1) (simplex2 := simplex2); auto.
 Qed.
 
 (* ============================================================ *)

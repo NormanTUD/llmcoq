@@ -8,15 +8,24 @@ Require Import Coq.Reals.RIneq.
 Require Import Coq.Logic.FunctionalExtensionality.
 Require Import Coq.Sets.Ensembles.
 Require Import Coq.Lists.List.
+Import ListNotations.
 Require Import Coq.Arith.PeanoNat.
 Require Import Coq.micromega.Lra.
 Require Import Coq.micromega.Lia.
 
-Require Import base.
-Require Import refinement.
+From base Require Import refinement.
 
-Import ListNotations.
+Require Import Coq.Reals.Reals.
 Open Scope R_scope.
+
+(* Ensure base and refinement are imported so RawDist and kl_divergence are known *)
+From base Require Import base.
+From base Require Import refinement.
+
+Definition js_divergence (p q : RawDist) : R :=
+  (* Jensen-Shannon divergence: symmetric, bounded *)
+  (* JS(p,q) = (KL(p,m) + KL(q,m)) / 2 where m = (p+q)/2 *)
+  (kl_divergence p q + kl_divergence q p) / 2.
 
 (* ============================================================ *)
 (* PART XVIII: METRIC STRUCTURE ON DISTRIBUTIONS                 *)
@@ -24,16 +33,6 @@ Open Scope R_scope.
 
 (* Before topology, we need a notion of "closeness" for          *)
 (* distributions. We use KL divergence as a premetric.           *)
-
-(* KL divergence is not symmetric, so we symmetrize. *)
-Definition js_divergence (p q : RawDist) : R :=
-  (* Jensen-Shannon divergence: symmetric, bounded *)
-  (* JS(p,q) = (KL(p,m) + KL(q,m)) / 2 where m = (p+q)/2 *)
-  (* We abstract the midpoint for now *)
-  (kl_divergence p q + kl_divergence q p) / 2.
-  (* Note: this is actually the symmetrized KL, not true JS. *)
-  (* True JS requires a midpoint distribution. We use this as *)
-  (* a simpler symmetric divergence for now. *)
 
 Lemma js_nonneg : forall p q,
   is_distribution p -> is_distribution q ->

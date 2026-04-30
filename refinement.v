@@ -138,14 +138,14 @@ Proof.
       exact vocab_size_pos.
     + (* Prove the rest of the tokens are valid *)
       apply IH.
-      * (* Prove the extended context is valid *)
-        unfold valid_context, context_length in *.
-        rewrite length_app. simpl.
-        lia.
-      * (* Prove the length constraint holds for the extended context *)
-        unfold context_length in *.
-        rewrite length_app. simpl.
-        lia.
+       * (* Prove the extended context is valid *)
+         unfold valid_context, context_length in *.
+         rewrite app_length. simpl. (* Changed length_app to app_length *)
+         lia.
+       * (* Prove the length constraint holds for the extended context *)
+         unfold context_length in *.
+         rewrite app_length. simpl. (* Changed length_app to app_length *)
+         lia.
 Qed.
 
 (* ============================================================ *)

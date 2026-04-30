@@ -209,7 +209,7 @@ Lemma ffn_preserves_length : forall (f : FFN) (ctx : Context),
 Proof.
   intros f ctx.
   unfold ffn_apply.
-  apply length_map.
+  apply map_length.
 Qed.
 
 (* --- 2.6 Residual Connection --- *)

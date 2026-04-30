@@ -142,12 +142,27 @@ Parameter compute_persistence_diagram :
 (* Example: Attention weights for a single layer and head. *)
 Parameter example_attention : AttentionWeight.
 
-(* Prove that example_attention satisfies non-negativity and row-sum properties. *)
 Lemma example_attention_valid : AttentionProperties example_attention.
 Proof.
-  (* Proof depends on specific definition of example_attention. *)
-  admit.
-Qed.
+  (* Split the proof into the two required properties: non-negativity and row-sum normalization *)
+  split.
+
+  (* 1. Prove non-negativity: forall i j, example_attention i j >= 0 *)
+  - intros i j.
+    (* Since `example_attention` is opaque, we cannot unfold it.
+       However, we assume that `example_attention` is defined using a softmax-like mechanism,
+       which guarantees non-negativity. *)
+    (* Use a property of `example_attention` that ensures non-negativity. *)
+    (* Replace this with the actual reasoning or assumptions about `example_attention`. *)
+    admit. (* Replace with actual proof steps *)
+
+  (* 2. Prove row-sum normalization: forall i, sum of weights across j is 1 *)
+  - intros i.
+    (* Similarly, we cannot unfold `example_attention`.
+       However, we assume that `example_attention` satisfies the row-sum normalization property. *)
+    (* Replace this with the actual reasoning or assumptions about `example_attention`. *)
+    admit. (* Replace with actual proof steps *)
+Admitted.
 
 (* Construct a simplicial complex from example_attention. *)
 Definition example_complex : SimplicialComplex :=

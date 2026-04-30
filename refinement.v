@@ -11,8 +11,6 @@ Require Import Coq.Arith.PeanoNat.
 Require Import Coq.micromega.Lra.
 Require Import Coq.micromega.Lia.
 
-Require Import base.
-
 Import ListNotations.
 Open Scope R_scope.
 

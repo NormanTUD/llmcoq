@@ -5,3 +5,5 @@
 *.vos
 *.txt
 .lia.cache
+.Makefile.d
+Makefile

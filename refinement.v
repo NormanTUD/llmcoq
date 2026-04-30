@@ -117,7 +117,6 @@ Proof.
   - lia.
 Qed.
 
-(* Now we can prove generation validity under a max-length budget *)
 Lemma generation_valid_tokens_bounded :
   forall model ctx n,
     valid_context ctx ->
@@ -127,21 +126,25 @@ Proof.
   intros model ctx n.
   revert ctx.
   induction n as [| n' IH].
-  - intros. simpl. constructor.
-  - intros ctx Hvalid Hbound. simpl.
+  - (* Base case: n = 0 *)
+    intros. simpl. constructor.
+  - (* Inductive case: n = S n' *)
+    intros ctx Hvalid Hbound. simpl.
     constructor.
-    + apply sample_valid.
+    + (* Prove the first token is valid *)
+      apply sample_valid.
       apply (softmax_is_distribution vocab_size (compute_logits model ctx)).
       exact vocab_size_pos.
-    + apply IH.
-      * apply extend_context_valid.
-        -- exact Hvalid.
-        -- unfold context_extendable, context_length in *. 
-           unfold context_length. rewrite app_length. simpl.
-           unfold valid_context, context_length in Hvalid.
-           lia.
-      * unfold context_length. rewrite app_length. simpl.
-        unfold context_length in Hbound. lia.
+    + (* Prove the rest of the tokens are valid *)
+      apply IH.
+      * (* Prove the extended context is valid *)
+        unfold valid_context, context_length in *.
+        rewrite app_length. simpl.
+        lia.
+      * (* Prove the length constraint holds for the extended context *)
+        unfold context_length in *.
+        rewrite app_length. simpl.
+        lia.
 Qed.
 
 (* ============================================================ *)

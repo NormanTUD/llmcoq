@@ -12,6 +12,8 @@ Require Import base.
 Import ListNotations.
 Open Scope R_scope.
 
+Parameter max_seq_length : nat.
+
 (* ============================================================ *)
 (* PART I: ATTENTION AS A WEIGHTED GRAPH                         *)
 (* ============================================================ *)

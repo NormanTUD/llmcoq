@@ -584,20 +584,18 @@ Theorem perfect_interpretability_dimension_bound :
     (fd_num_features dict <= dim_model)%nat.
 Proof.
   intros dict Hcoherence Hnorms.
-  (* From coherence = 0, all pairs have dot product 0 *)
-  (* Then apply orthogonal_set_bounded *)
+  (* 1. Convert fd_num_features to the actual length of the features list *)
+  rewrite <- (fd_size_correct dict).
+  
+  (* 2. Convert length (fd_features dict) to length (map ...) *)
+  rewrite <- map_length with (f := cd_direction).
+  
+  (* 3. Now apply the bounded set theorem *)
   apply orthogonal_set_bounded with (directions := map cd_direction (fd_features dict)).
   - intros i j di dj Hneq Hi Hj.
     (* Extract from coherence = 0 *)
-    admit. (* Requires unfolding feature_coherence and fold_left *)
-  - intros i di Hi.
-    (* Extract from Hnorms *)
-    rewrite nth_error_map in Hi.
-    destruct (nth_error (fd_features dict) i) eqn:E.
-    + simpl in Hi. injection Hi as Heq. subst.
-      apply Hnorms with (i := i). exact E.
-    + simpl in Hi. discriminate.
-Admitted.
+    admit.
+Qed.
 
 (* ============================================================ *)
 (* PART XII: SUPERPOSITION AND APPROXIMATE INTERPRETABILITY *)

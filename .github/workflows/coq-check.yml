@@ -1,0 +1,45 @@
+name: Coq Verification
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check-coq:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Coq
+        run: |
+          sudo apt-get update -y -q
+          sudo apt-get install -y -q --no-install-recommends coq
+
+      - name: Verify all .v files compile
+        run: |
+          EXIT_CODE=0
+          FILES=$(find . -name "*.v" -type f)
+
+          if [ -z "$FILES" ]; then
+            echo "No .v files found in the repository."
+            exit 1
+          fi
+
+          for file in $FILES; do
+            echo "::group::Compiling $file"
+            if coqc "$file"; then
+              echo "✅ $file compiled successfully."
+            else
+              echo "❌ $file failed to compile."
+              EXIT_CODE=1
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "::error::One or more .v files failed to compile."
+          fi
+
+          exit $EXIT_CODE
